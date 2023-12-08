@@ -3,24 +3,11 @@ import like from "../assets/like.svg";
 import commentLogo from "../assets/commentLogo.svg";
 import earn from "../assets/earn.svg";
 
-const calculateEarnings = (subscriberCount, views, comments, likes) => {
-  const earnings = Math.min(subscriberCount, views) + 10 * comments + 5 * likes;
-  return earnings;
-};
-
 const ReportCard = (props) => {
   const {
     snippet: { publishedAt, thumbnails },
     statistics: { viewCount, likeCount, commentCount },
-    subscriberCount,
   } = props;
-
-  const earnings = calculateEarnings(
-    subscriberCount,
-    viewCount,
-    commentCount,
-    likeCount,
-  );
 
   return (
     <>
@@ -54,9 +41,7 @@ const ReportCard = (props) => {
           </div>
 
           <div className="m-5 h-40 w-64 rounded-md bg-[#282828]">
-            <div className="mb-2 mt-6 text-3xl font-bold text-white">
-              <p>{earnings}</p>
-            </div>
+            <div className="mb-2 mt-6 text-3xl font-bold text-white"></div>
             <div className="m-auto h-8 w-24 rounded-lg border bg-white"></div>
           </div>
         </div>

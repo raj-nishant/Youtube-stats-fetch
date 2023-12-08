@@ -1,19 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import ReportCard from "./ReportCard";
-import { API_KEY } from "../config";
 import {
-  getVideoData,
   fetchChannelId,
-  fetchMostEarningVideo, // Updated function name
-  fetchSubscriberCount,
+  fetchMostEarningVideo,
   getVideoIdFromUrl,
 } from "../utils/apiHelper";
 
 const Body = () => {
   const [videoLink, setVideoLink] = useState("");
-  const [videoData, setVideoData] = useState(null);
-  const [subscriberCount, setSubscriberCount] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dataFetched, setDataFetched] = useState(null);
   const isInitialRender = useRef(true);
 
   const getData = async () => {
@@ -34,16 +30,7 @@ const Body = () => {
         // Update to fetch the video with the highest earnings
         const mostEarningVideoId = await fetchMostEarningVideo(channelId);
         console.log(mostEarningVideoId);
-        // const videoData = await getVideoData(mostEarningVideoId, setVideoData);
-
-        // if (videoData) {
-        //   setVideoData(videoData);
-        //   await fetchSubscriberCount(channelId, setSubscriberCount);
-        // } else {
-        //   console.error("Failed to fetch video data");
-        // }
-
-        // const mostEarningVideoData = await getVideoData(mostEarningVideoId);
+        setDataFetched(mostEarningVideoId);
       } catch (error) {
         console.error(error.message);
       }
@@ -66,8 +53,14 @@ const Body = () => {
     return <p>Loading...</p>;
   }
 
-  if (videoData && subscriberCount) {
-    return <ReportCard {...videoData} subscriberCount={subscriberCount} />;
+  if (dataFetched) {
+    return (
+      <div>
+        {dataFetched.map((eachEle, index) => (
+          <ReportCard key={index} {...eachEle} />
+        ))}
+      </div>
+    );
   }
 
   return (

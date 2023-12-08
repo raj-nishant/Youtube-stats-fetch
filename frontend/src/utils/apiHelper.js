@@ -29,104 +29,57 @@ const fetchChannelId = async (videoId) => {
 const fetchMostEarningVideo = async (channelId) => {
   try {
     const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=viewCount&maxResults=1&type=video&key=${API_KEY}`,
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&type=video&key=${API_KEY}`,
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch most earning video for channel ${channelId}`,
-      );
+      throw new Error(`Failed to fetch data. Status: ${response.status}`);
     }
 
     const data = await response.json();
 
-    if (data.items.length === 0) {
-      throw new Error(`No videos found for channel ${channelId}`);
-    }
+    // Assuming data.items is an array of videos
+    const videos = data.items;
 
-    const mostEarningVideoId = data.items[0].id.videoId;
-
-    // Fetch detailed video data using videos.list endpoint
-    const videoData = await getVideoData(mostEarningVideoId);
-
-    if (!videoData) {
-      throw new Error(
-        `Failed to fetch video data for video ${mostEarningVideoId}`,
+    // Fetch video details for each videoId
+    const videoDetailsPromises = videos.map(async (video) => {
+      const videoId = video.id.videoId;
+      const videoResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`,
       );
-    }
+      const videoData = await videoResponse.json();
+      return videoData.items[0]; // Assuming there is only one item for each videoId
+    });
 
-    const earnings =
-      Math.min(
-        videoData.statistics.subscriberCount || 0,
-        videoData.statistics.viewCount || 0,
-      ) +
-      10 * (videoData.statistics.commentCount || 0) +
-      5 * (videoData.statistics.likeCount || 0);
+    // Wait for all video details to be fetched
+    const videoDetails = await Promise.all(videoDetailsPromises);
 
-    if (earnings > 0) {
-      return { mostEarningVideoId, videoData };
-    } else {
-      throw new Error(`Video with ID ${mostEarningVideoId} has zero earnings`);
-    }
+    // Calculate earnings for each video and sort them in descending order
+    const sortedVideos = videoDetails
+      .map((video) => {
+        const { statistics } = video;
+        const minSubsAndView = Math.min(
+          statistics.subscriberCount,
+          statistics.viewCount,
+        );
+        const commentsEarnings = 10 * statistics.commentCount;
+        const likesEarnings = 5 * statistics.likeCount;
+        const earnings = minSubsAndView + commentsEarnings + likesEarnings;
+
+        return {
+          ...video,
+          earnings: earnings,
+        };
+      })
+      .sort((a, b) => b.earnings - a.earnings);
+
+    // Return the top 3 earning videos
+    return sortedVideos.slice(0, 3);
   } catch (error) {
-    console.error(error.message);
-    return null;
+    console.error("Error fetching data:", error.message);
+    return null; // Return null or an empty array, depending on your use case
   }
 };
-
-const fetchSubscriberCount = async (channelId, setSubscriberCount) => {
-  try {
-    // Make a GET request to the YouTube API's channels.list endpoint
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${API_KEY}`,
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch subscriber count for channel ${channelId}`,
-      );
-    }
-
-    const data = await response.json();
-
-    // Extract the subscriber count from the API response
-    const subscriberCount = data.items[0]?.statistics?.subscriberCount;
-
-    if (subscriberCount) {
-      setSubscriberCount(subscriberCount);
-    }
-    return subscriberCount;
-  } catch (error) {
-    console.error(error.message);
-    return null;
-  }
-};
-
-// const getVideoData = async (videoId, setVideoData) => {
-//   try {
-//     // Make a GET request to the YouTube API's videos.list endpoint
-//     const response = await fetch(
-//       `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,contentDetails,statistics&key=${API_KEY}`,
-//     );
-
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch video data for video ${videoId}`);
-//     }
-
-//     const data = await response.json();
-
-//     // Extract the video data from the API response
-//     const videoData = data.items[0];
-
-//     if (videoData) {
-//       setVideoData(videoData);
-//     }
-//     return videoData;
-//   } catch (error) {
-//     console.error(error.message);
-//     return null;
-//   }
-// };
 
 const getVideoIdFromUrl = (url) => {
   try {
@@ -145,10 +98,4 @@ const getVideoIdFromUrl = (url) => {
   }
 };
 
-export {
-  fetchChannelId,
-  fetchMostEarningVideo,
-  fetchSubscriberCount,
-  getVideoData,
-  getVideoIdFromUrl,
-};
+export { fetchChannelId, fetchMostEarningVideo, getVideoIdFromUrl };
