@@ -1,12 +1,12 @@
 # Node.js
-node_modules/
+node_modules
 
 # Build output
-dist/
+dist
 
 # Generated files
-coverage/
-.nyc_output/
+coverage
+.nyc_output
 
 # IDE specific files
-.idea/
+.idea
