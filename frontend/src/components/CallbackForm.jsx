@@ -8,12 +8,23 @@ const CallbackForm = ({ onClose }) => {
   const [additionalComments, setAdditionalComments] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [error, setError] = useState(null);
+
+  const resetForm = () => {
+    setName("");
+    setContactNumber("");
+    setCallbackTime("");
+    setAdditionalComments("");
+    setSubmissionSuccess(false);
+    setError(null);
+    onClose();
+  };
 
   const handleSubmit = async () => {
-    setSubmitting(true);
-
     try {
-      const response = await fetch("http://localhost:8000", {
+      setSubmitting(true);
+
+      const response = await fetch("http://localhost:3001/api", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -27,26 +38,20 @@ const CallbackForm = ({ onClose }) => {
       });
 
       if (response.ok) {
-        // Request successful, set submission success state
+        // Submission successful, show success message
         setSubmissionSuccess(true);
       } else {
-        // Request failed, handle error
-        console.error("Failed to submit callback request");
+        const errorText = await response.text();
+        throw new Error(
+          `Server responded with status ${response.status}: ${errorText}`,
+        );
       }
     } catch (error) {
-      console.error("Error submitting callback request:", error);
+      console.error("Error submitting form:", error);
+      setError("Error submitting form. Please try again later.");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setName("");
-    setContactNumber("");
-    setCallbackTime("");
-    setAdditionalComments("");
-    setSubmissionSuccess(false);
-    onClose();
   };
 
   return (
@@ -66,6 +71,7 @@ const CallbackForm = ({ onClose }) => {
               />
             </label>
           </div>
+
           <div className="mb-4">
             <label className="mb-2 block text-sm  text-white">
               <input
@@ -107,6 +113,7 @@ const CallbackForm = ({ onClose }) => {
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>
+          {error && <p className="mt-2 text-red-500">{error}</p>}
         </>
       )}
     </div>
