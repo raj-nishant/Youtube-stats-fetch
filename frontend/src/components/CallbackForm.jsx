@@ -24,7 +24,7 @@ const CallbackForm = ({ onClose }) => {
     try {
       setSubmitting(true);
 
-      const response = await fetch("http://localhost:3001/api", {
+      const response = await fetch("http://localhost:3001/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

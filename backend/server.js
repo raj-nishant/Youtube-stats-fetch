@@ -15,7 +15,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-app.post("/api", async (req, res) => {
+app.post("/", async (req, res) => {
   const { name, contactNumber, callbackTime, additionalComments } = req.body;
 
   // Nodemailer setup
