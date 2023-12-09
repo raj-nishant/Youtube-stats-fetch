@@ -10,3 +10,5 @@ coverage
 
 # IDE specific files
 .idea
+
+.env
