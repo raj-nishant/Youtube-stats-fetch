@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const corsOptions = {
-  origin: "http://localhost:3000", // Update to the correct origin of your frontend
+  origin: "http://localhost:3000",
   methods: "POST",
 };
 
